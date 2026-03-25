@@ -23,29 +23,29 @@ export function ProjectModal({ project }: { project: Project }) {
             {project.title}
           </h3>
 
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
             {project.description}
           </p>
 
-          <p className="text-xs text-gray-400 mt-3">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
             {project.company}
           </p>
         </Card>
       }
     >
       {/* Company */}
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         {project.company}
       </p>
 
       {/* Details */}
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
         {project.details}
       </p>
 
       {/* Stack */}
       <div className="mb-6">
-        <h4 className="text-sm font-semibold text-gray-800 mb-2">
+        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Tech Stack
         </h4>
 
@@ -55,10 +55,10 @@ export function ProjectModal({ project }: { project: Project }) {
               key={tech}
               className="
                 text-xs
-                bg-gray-100
+                bg-gray-100 dark:bg-gray-800
                 px-3 py-1
                 rounded-full
-                text-gray-700
+                text-gray-700 dark:text-gray-300
               "
             >
               {tech}
@@ -68,12 +68,12 @@ export function ProjectModal({ project }: { project: Project }) {
       </div>
 
       {/* Impact */}
-      <div className="border-t pt-4">
-        <h4 className="text-sm font-semibold text-gray-800 mb-2">
+      <div className="border-t dark:border-gray-700 pt-4">
+        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Impact
         </h4>
 
-        <p className="text-gray-700">
+        <p className="text-gray-700 dark:text-gray-300">
           {project.impact}
         </p>
       </div>

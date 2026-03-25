@@ -1,6 +1,8 @@
 import "./globals.css";
 import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ThemeProvider } from "@/components/ui/ThemeProvider";
+import { PageTransition } from "@/components/ui/PageTransition";
 
 import { Inter } from "next/font/google";
 
@@ -17,13 +19,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-white text-gray-900`}>
-        {/* <body className="bg-white text-gray-900"> */}
-        <div className="fixed inset-0 -z-10 bg-linear-to-br from-gray-50 via-white to-gray-100 opacity-60" />
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
+        <ThemeProvider>
+          <div className="fixed inset-0 -z-10 bg-linear-to-br from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 opacity-60" />
+          <Navbar />
+          <PageTransition>
+            <main>{children}</main>
+          </PageTransition>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

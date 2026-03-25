@@ -37,8 +37,9 @@ export function Modal({
                 left-1/2 top-1/2
                 w-[90vw] max-w-2xl
                 -translate-x-1/2 -translate-y-1/2
-                rounded-xl bg-white p-8 shadow-2xl
+                rounded-xl bg-white dark:bg-gray-900 p-8 shadow-2xl
                 focus:outline-none
+                text-gray-900 dark:text-gray-100
                 "
           >
             <Dialog.Title className="text-2xl font-bold mb-4">
@@ -47,7 +48,7 @@ export function Modal({
 
             {children}
 
-            <Dialog.Close className="absolute right-4 top-4 text-gray-500 hover:text-black">
+            <Dialog.Close className="absolute right-4 top-4 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white">
               <X />
             </Dialog.Close>
           </motion.div>

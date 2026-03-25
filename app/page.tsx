@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="py-10 bg-linear-to-b from-gray-50 to-white">
+      <section className="py-10 bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
         <Container>
           <div className="grid grid-cols-1 md:grid-cols-1 items-center gap-16">
             {/* Left */}
@@ -27,7 +27,7 @@ export default function Home() {
                     height={80}
                     className="relative rounded-full shadow-xl"
                   />
-                  <h1 className="text-6xl font-bold tracking-tight text-slate-900">
+                  <h1 className="text-6xl font-bold tracking-tight text-slate-900 dark:text-gray-100">
                     {profile.name}
                   </h1>
 
@@ -40,11 +40,11 @@ export default function Home() {
                 {/* </FadeIn> */}
 
                 {/* <FadeIn> */}
-                <p className="mt-4 text-2xl text-slate-600">{profile.role}</p>
+                <p className="mt-4 text-2xl text-slate-600 dark:text-gray-400">{profile.role}</p>
                 {/* </FadeIn> */}
 
                 {/* <FadeIn> */}
-                <p className="mt-6 max-w-6xl text-lg leading-relaxed text-slate-700">
+                <p className="mt-6 max-w-6xl text-lg leading-relaxed text-slate-700 dark:text-gray-300">
                   {profile.summary}
                 </p>
                 {/* </FadeIn> */}
@@ -59,7 +59,7 @@ export default function Home() {
                   </Link>
                 </div>
 
-                <p className="mt-6 text-sm text-slate-400">
+                <p className="mt-6 text-sm text-slate-400 dark:text-gray-600">
                   Based in Karachi • Open to remote opportunities
                 </p>
               </div>
@@ -69,7 +69,7 @@ export default function Home() {
       </section>
 
       {/* FEATURED PROJECTS */}
-      <section className="bg-gray-50 py-10">
+      <section className="bg-gray-50 dark:bg-gray-900 py-10">
         <FadeIn>
           <Container>
             <Section title="Featured Projects">
