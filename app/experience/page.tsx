@@ -10,7 +10,7 @@ export default function ExperiencePage() {
   return (
     <Container>
       <Section title="Experience">
-        <div className="mb-10 flex items-start justify-between gap-4 flex-wrap">
+        <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-3xl font-semibold text-slate-900 dark:text-gray-100">
               {years}+ Years of Experience

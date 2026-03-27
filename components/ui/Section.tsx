@@ -6,8 +6,8 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="p-6">
-      <h2 className="text-3xl font-semibold mb-12 tracking-tight">{title}</h2>
+    <section className="py-4">
+      <h2 className="text-2xl font-semibold mb-6 tracking-tight">{title}</h2>
       {children}
     </section>
   );

@@ -7,4 +7,6 @@ export const profile = {
   email: "talhahsn@gmail.com",
   linkedin: "https://www.linkedin.com/in/talhahsn/",
   github: "https://github.com/talhahsn",
+  available: true,
+  availableNote: "· Open to remote & relocation opportunities",
 }
