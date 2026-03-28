@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, useMotionValue, useTransform, useInView, animate } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { profile } from "@/data/profile";
 import { experience } from "@/data/experience";
@@ -9,6 +9,78 @@ import { ProjectModal } from "./projects/ProjectModal";
 import Link from "next/link";
 import Image from "next/image";
 import { Download, MapPin, ArrowRight, BadgeCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    const controls = animate(0, to, {
+      duration: 1.6,
+      ease: "easeOut",
+      onUpdate(v) {
+        if (ref.current) ref.current.textContent = Math.round(v) + suffix;
+      },
+    });
+    return () => controls.stop();
+  }, [inView, to, suffix]);
+
+  return <span ref={ref}>0{suffix}</span>;
+}
+
+const ROLES = [
+  "Senior Software Engineer",
+  "Full-Stack Engineer",
+  "Technical Lead",
+];
+
+function Typewriter() {
+  const [displayed, setDisplayed] = useState("");
+  const state = useRef({ roleIdx: 0, deleting: false, pauseTicks: 0 });
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const s = state.current;
+      const current = ROLES[s.roleIdx];
+
+      if (s.pauseTicks > 0) {
+        s.pauseTicks--;
+        return;
+      }
+
+      if (!s.deleting) {
+        setDisplayed((prev) => {
+          const next = current.slice(0, prev.length + 1);
+          if (next === current) {
+            s.pauseTicks = 32;
+            s.deleting = true;
+          }
+          return next;
+        });
+      } else {
+        setDisplayed((prev) => {
+          const next = prev.slice(0, -1);
+          if (next === "") {
+            s.deleting = false;
+            s.roleIdx = (s.roleIdx + 1) % ROLES.length;
+          }
+          return next;
+        });
+      }
+    }, 50);
+
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <span>
+      {displayed}
+      <span className="animate-pulse text-sky-500">|</span>
+    </span>
+  );
+}
 
 const stagger: Variants = {
   hidden: {},
@@ -28,13 +100,64 @@ const skills = [
 export default function Home() {
   const previewExp = experience.slice(0, 3);
 
+  const cursorX = useMotionValue(-999);
+  const cursorY = useMotionValue(-999);
+  const spotlightBg = useTransform(
+    [cursorX, cursorY],
+    ([x, y]: number[]) =>
+      `radial-gradient(circle 300px at ${x}px ${y}px, rgba(251,191,36,0.22) 0%, transparent 70%)`
+  );
+
   return (
     <div>
       {/* HERO */}
-      <section className="pt-12 pb-16 bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+      <section
+        className="relative pt-12 pb-16 overflow-hidden"
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          cursorX.set(e.clientX - rect.left);
+          cursorY.set(e.clientY - rect.top);
+        }}
+        onMouseLeave={() => {
+          cursorX.set(-999);
+          cursorY.set(-999);
+        }}
+      >
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-linear-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-950" />
+
+        {/* Dot grid — light */}
+        <div
+          className="absolute inset-0 dark:hidden"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgba(148,163,184,0.45) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        {/* Dot grid — dark */}
+        <div
+          className="absolute inset-0 hidden dark:block"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgba(51,65,85,0.7) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+
+        {/* Mouse spotlight glow — follows cursor, no mask needed */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: spotlightBg }}
+        />
+
+        {/* Color blob — top right */}
+        <div className="absolute -top-24 -right-24 w-120 h-120 rounded-full bg-sky-300 dark:bg-sky-900 blur-3xl opacity-20 dark:opacity-20" />
+        {/* Color blob — bottom left */}
+        <div className="absolute -bottom-16 -left-16 w-96 h-96 rounded-full bg-indigo-300 dark:bg-indigo-900 blur-3xl opacity-15 dark:opacity-15" />
+
+        {/* Content */}
         <Container>
           <motion.div
-            className="flex flex-col items-center text-center"
+            className="relative z-10 flex flex-col items-center text-center"
             variants={stagger}
             initial="hidden"
             animate="show"
@@ -76,7 +199,7 @@ export default function Home() {
 
             {/* Role */}
             <p className="mt-3 text-xl font-medium text-slate-600 dark:text-gray-400">
-              {profile.role}
+              <Typewriter />
             </p>
 
             {/* Bio */}
@@ -95,7 +218,7 @@ export default function Home() {
               {skills.map((skill) => (
                 <span
                   key={skill}
-                  className="px-3 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium"
+                  className="px-3 py-1 text-xs rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium"
                 >
                   {skill}
                 </span>
@@ -110,14 +233,14 @@ export default function Home() {
               <a
                 href="/resume/M.Talha Hassan Resume.pdf"
                 download
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium hover:bg-slate-700 dark:hover:bg-gray-200 transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium hover:bg-slate-700 dark:hover:bg-gray-200 transition-colors shadow-sm"
               >
                 <Download size={15} />
                 Download Resume
               </a>
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-slate-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium text-slate-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-800 transition-colors backdrop-blur-sm"
               >
                 Get in touch
               </Link>
@@ -129,13 +252,13 @@ export default function Home() {
               className="mt-8 flex gap-12 flex-wrap justify-center"
             >
               {[
-                { value: "8+", label: "Years" },
-                { value: "5+", label: "Companies" },
-                { value: "10+", label: "Products" },
-              ].map(({ value, label }) => (
+                { to: 8, suffix: "+", label: "Years" },
+                { to: 5, suffix: "+", label: "Companies" },
+                { to: 10, suffix: "+", label: "Products" },
+              ].map(({ to, suffix, label }) => (
                 <div key={label} className="text-center">
                   <p className="text-2xl font-bold text-slate-900 dark:text-gray-100">
-                    {value}
+                    <Counter to={to} suffix={suffix} />
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {label}
@@ -157,14 +280,14 @@ export default function Home() {
       </section>
 
       {/* FEATURED PROJECTS */}
-      <section className="py-12 bg-gray-50 dark:bg-gray-900">
+      <section className="py-12 bg-white dark:bg-gray-950">
         <Container>
           <div className="flex items-end justify-between mb-5">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100 pl-3 border-l-2 border-sky-500">
                 Featured Projects
               </h2>
-              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm pl-3">
                 Selected enterprise work across domains
               </p>
             </div>
@@ -192,14 +315,14 @@ export default function Home() {
       </section>
 
       {/* EXPERIENCE PREVIEW */}
-      <section className="py-12 bg-white dark:bg-gray-950">
+      <section className="py-12 bg-slate-50 dark:bg-gray-900">
         <Container>
           <div className="flex items-end justify-between mb-5">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100 pl-3 border-l-2 border-sky-500">
                 Experience
               </h2>
-              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm pl-3">
                 Where I&apos;ve built and shipped
               </p>
             </div>
@@ -211,7 +334,7 @@ export default function Home() {
             </Link>
           </div>
           <motion.div
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3"
             variants={stagger}
             initial="hidden"
             whileInView="show"
@@ -219,7 +342,7 @@ export default function Home() {
           >
             {previewExp.map((item) => (
               <motion.div key={item.company + item.role} variants={fadeUp}>
-                <div className="flex items-center gap-4 p-5 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                <div className="flex items-center gap-4 p-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-sky-200 dark:hover:border-sky-900 hover:shadow-sm transition-all">
                   {item.logo && (
                     <Image
                       src={item.logo}
@@ -255,18 +378,18 @@ export default function Home() {
       </section>
 
       {/* SKILLS */}
-      <section className="py-12 bg-gray-50 dark:bg-gray-900">
+      <section className="py-12 bg-white dark:bg-gray-950">
         <Container>
           <div className="mb-5">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100 pl-3 border-l-2 border-sky-500">
               Skills & Stack
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm pl-3">
               Technologies I work with daily
             </p>
           </div>
           <motion.div
-            className="flex flex-wrap gap-3"
+            className="flex flex-wrap gap-2.5"
             variants={stagger}
             initial="hidden"
             whileInView="show"
@@ -285,7 +408,7 @@ export default function Home() {
               <motion.span
                 key={skill}
                 variants={fadeUp}
-                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-600 hover:text-sky-700 dark:hover:text-sky-300 transition-colors cursor-default"
+                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 bg-slate-50 dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950 hover:text-sky-700 dark:hover:text-sky-300 transition-all cursor-default"
               >
                 {skill}
               </motion.span>
