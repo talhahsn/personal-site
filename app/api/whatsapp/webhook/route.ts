@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { editBlogPost } from "@/lib/groq";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { slugify, autoExcerpt } from "@/lib/blog";
 
 // GET — Meta webhook verification handshake
 export async function GET(req: NextRequest) {
@@ -86,16 +87,22 @@ export async function POST(req: NextRequest) {
 
     const updatedContent = await editBlogPost(draft.content, text);
 
+    // Extract updated title from first H1 in content, fall back to existing title
+    const titleMatch = updatedContent.match(/^#\s+(.+)$/m);
+    const updatedTitle = titleMatch ? titleMatch[1].trim() : draft.title;
+    const updatedExcerpt = autoExcerpt(updatedContent);
+    const updatedSlug = updatedTitle !== draft.title ? slugify(updatedTitle) : draft.slug;
+
     const { error: updateErr } = await supabaseAdmin
       .from("posts")
-      .update({ content: updatedContent })
+      .update({ content: updatedContent, title: updatedTitle, excerpt: updatedExcerpt, slug: updatedSlug })
       .eq("id", draft.id);
 
     if (updateErr) {
       await sendWhatsAppMessage(`Edit saved but DB update failed: ${updateErr.message}`);
     } else {
       await sendWhatsAppMessage(
-        `✅ Done! Post updated.\n\nPreview: https://talhahsn.vercel.app/blog/${draft.slug}\n\nReply *publish* to go live or keep chatting to refine.`
+        `✅ Done! Post updated.\n\nPreview: https://talhahsn.vercel.app/blog/${updatedSlug}\n\nReply *publish* to go live or keep chatting to refine.`
       );
     }
   } catch (err) {

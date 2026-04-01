@@ -11,7 +11,8 @@ export function calcReadTime(content: string) {
 
 export function autoExcerpt(content: string, maxLen = 160) {
   return content
-    .replace(/[#*`>\[\]!]/g, "")
+    .replace(/^#{1,6}\s+.*$/gm, "")  // remove heading lines entirely
+    .replace(/[*`>\[\]!]/g, "")
     .replace(/\n+/g, " ")
     .trim()
     .slice(0, maxLen)
