@@ -7,6 +7,7 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/experience", label: "Experience" },
   { href: "/projects", label: "Projects" },
+  { href: "/blog", label: "Writing" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -16,7 +17,7 @@ export function NavLinks() {
   return (
     <>
       {links.map(({ href, label }) => {
-        const active = pathname === href;
+        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
           <Link
             key={href}
