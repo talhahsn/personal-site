@@ -33,7 +33,7 @@ export type GeneratedPost = {
 };
 
 export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   // Step 1: pick a topic if not provided
   let chosenTopic = topic;
@@ -94,7 +94,7 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
 }
 
 export async function editBlogPost(currentContent: string, instruction: string): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const result = await model.generateContent({
     systemInstruction: SYSTEM_PROMPT,
