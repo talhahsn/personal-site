@@ -1,8 +1,7 @@
 import { BLOG_TOPIC_SEEDS } from "@/data/blog-topics";
 import { slugify, autoExcerpt, calcReadTime } from "@/lib/blog";
 
-const MODEL = "gemini-1.5-flash";
-const API_BASE = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent`;
+const MODEL = "llama-3.3-70b-versatile";
 
 const SYSTEM_PROMPT = `You are Talha Hassan — a software engineering leader with 10+ years of experience across AI, fintech, insurtech, and SaaS products. You've led teams, shipped real products, and have opinions forged from actual scars.
 
@@ -22,28 +21,27 @@ Format rules:
 - Include a mermaid diagram or code block where genuinely useful, not as decoration
 - Length: 800-1200 words (enough to be useful, short enough to actually be read)`;
 
-async function geminiCall(contents: object[], systemInstruction?: string): Promise<string> {
-  const key = process.env.GEMINI_API_KEY;
-  const url = `${API_BASE}?key=${key}`;
+async function groqCall(userMessage: string, systemPrompt?: string): Promise<string> {
+  const messages: { role: string; content: string }[] = [];
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+  messages.push({ role: "user", content: userMessage });
 
-  const body: Record<string, unknown> = { contents };
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
-  }
-
-  const res = await fetch(url, {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({ model: MODEL, messages }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${err}`);
+    throw new Error(`Groq API error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  return data.choices?.[0]?.message?.content ?? "";
 }
 
 export type GeneratedPost = {
@@ -61,40 +59,28 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
   let chosenTopic = topic;
   if (!chosenTopic) {
     const seeds = BLOG_TOPIC_SEEDS.join("\n");
-    chosenTopic = await geminiCall([
-      {
-        role: "user",
-        parts: [{ text:
-          `Today's date: ${new Date().toDateString()}\n\n` +
-          `You are choosing a blog topic for a tech engineering leader. ` +
-          `Pick ONE specific, timely angle from the following theme areas. ` +
-          `Make it specific — not "AI agents" but "Why most AI agent demos fail in production".\n\n` +
-          `Theme areas:\n${seeds}\n\n` +
-          `Respond with ONLY the topic title, nothing else.`
-        }],
-      },
-    ]);
+    chosenTopic = await groqCall(
+      `Today's date: ${new Date().toDateString()}\n\n` +
+      `You are choosing a blog topic for a tech engineering leader. ` +
+      `Pick ONE specific, timely angle from the following theme areas. ` +
+      `Make it specific — not "AI agents" but "Why most AI agent demos fail in production".\n\n` +
+      `Theme areas:\n${seeds}\n\n` +
+      `Respond with ONLY the topic title, nothing else.`
+    );
     chosenTopic = chosenTopic.trim();
   }
 
   // Step 2: generate the full post
-  const raw = await geminiCall(
-    [
-      {
-        role: "user",
-        parts: [{ text:
-          `Write a blog post about: "${chosenTopic}"\n\n` +
-          `Return a JSON object with exactly these fields:\n` +
-          `{\n` +
-          `  "title": "the post title",\n` +
-          `  "category": "one of: AI & ML, Engineering, Leadership, Career, Frontend, Backend",\n` +
-          `  "tags": ["tag1", "tag2", "tag3"],\n` +
-          `  "content": "full markdown content of the post"\n` +
-          `}\n\n` +
-          `Return ONLY the JSON, no markdown fences, no explanation.`
-        }],
-      },
-    ],
+  const raw = await groqCall(
+    `Write a blog post about: "${chosenTopic}"\n\n` +
+    `Return a JSON object with exactly these fields:\n` +
+    `{\n` +
+    `  "title": "the post title",\n` +
+    `  "category": "one of: AI & ML, Engineering, Leadership, Career, Frontend, Backend",\n` +
+    `  "tags": ["tag1", "tag2", "tag3"],\n` +
+    `  "content": "full markdown content of the post"\n` +
+    `}\n\n` +
+    `Return ONLY the JSON, no markdown fences, no explanation.`,
     SYSTEM_PROMPT
   );
 
@@ -116,17 +102,10 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
 }
 
 export async function editBlogPost(currentContent: string, instruction: string): Promise<string> {
-  return geminiCall(
-    [
-      {
-        role: "user",
-        parts: [{ text:
-          `Here is the current blog post in markdown:\n\n${currentContent}\n\n` +
-          `Apply this change: "${instruction}"\n\n` +
-          `Return ONLY the updated markdown content, no explanation.`
-        }],
-      },
-    ],
+  return groqCall(
+    `Here is the current blog post in markdown:\n\n${currentContent}\n\n` +
+    `Apply this change: "${instruction}"\n\n` +
+    `Return ONLY the updated markdown content, no explanation.`,
     SYSTEM_PROMPT
   );
 }
