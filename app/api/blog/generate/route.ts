@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { generateBlogPost } from "@/lib/gemini";
+import { generateBlogPost } from "@/lib/groq";
 import { sendWhatsAppMessage, buildReviewMessage } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { editBlogPost } from "@/lib/gemini";
+import { editBlogPost } from "@/lib/groq";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 
 // GET — Meta webhook verification handshake
