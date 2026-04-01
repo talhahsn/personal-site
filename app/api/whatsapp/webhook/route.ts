@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+import { editBlogPost } from "@/lib/gemini";
+import { sendWhatsAppMessage } from "@/lib/whatsapp";
 
 // GET — Meta webhook verification handshake
 export async function GET(req: NextRequest) {
@@ -18,24 +21,87 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  // Acknowledge receipt immediately (Meta requires < 5s response)
   const entry = body?.entry?.[0];
   const change = entry?.changes?.[0];
   const message = change?.value?.messages?.[0];
 
-  if (!message) {
-    return NextResponse.json({ status: "no_message" });
-  }
+  if (!message) return NextResponse.json({ status: "no_message" });
 
-  const from = message.from; // sender's WhatsApp number
   const text = message.type === "text" ? message.text?.body?.trim() : null;
+  if (!text) return NextResponse.json({ status: "ignored" });
 
-  if (!text) {
-    return NextResponse.json({ status: "ignored" });
+  console.log(`[WhatsApp] Incoming: "${text}"`);
+
+  // Find the most recent draft (the one pending review)
+  const { data: draft, error } = await supabaseAdmin
+    .from("posts")
+    .select("*")
+    .eq("published", false)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !draft) {
+    await sendWhatsAppMessage("No draft found to act on. Generate a new post first.");
+    return NextResponse.json({ status: "no_draft" });
   }
 
-  console.log(`[WhatsApp] Message from ${from}: ${text}`);
+  const cmd = text.toLowerCase();
 
-  // Message handling will be wired in here once the full agent is built
+  // PUBLISH
+  if (cmd === "publish") {
+    const { error: pubErr } = await supabaseAdmin
+      .from("posts")
+      .update({ published: true, published_at: new Date().toISOString() })
+      .eq("id", draft.id);
+
+    if (pubErr) {
+      await sendWhatsAppMessage(`Failed to publish: ${pubErr.message}`);
+    } else {
+      await sendWhatsAppMessage(
+        `🚀 *Published!*\n\n*${draft.title}*\n\nhttps://talhahsn.vercel.app/blog/${draft.slug}`
+      );
+    }
+    return NextResponse.json({ status: "published" });
+  }
+
+  // DISCARD
+  if (cmd === "discard") {
+    const { error: delErr } = await supabaseAdmin
+      .from("posts")
+      .delete()
+      .eq("id", draft.id);
+
+    if (delErr) {
+      await sendWhatsAppMessage(`Failed to delete: ${delErr.message}`);
+    } else {
+      await sendWhatsAppMessage(`🗑️ Draft discarded: "${draft.title}"`);
+    }
+    return NextResponse.json({ status: "discarded" });
+  }
+
+  // EDIT REQUEST — pass to Gemini
+  try {
+    await sendWhatsAppMessage(`✏️ On it — editing "${draft.title}"...`);
+
+    const updatedContent = await editBlogPost(draft.content, text);
+
+    const { error: updateErr } = await supabaseAdmin
+      .from("posts")
+      .update({ content: updatedContent })
+      .eq("id", draft.id);
+
+    if (updateErr) {
+      await sendWhatsAppMessage(`Edit saved but DB update failed: ${updateErr.message}`);
+    } else {
+      await sendWhatsAppMessage(
+        `✅ Done! Post updated.\n\nPreview: https://talhahsn.vercel.app/blog/${draft.slug}\n\nReply *publish* to go live or keep chatting to refine.`
+      );
+    }
+  } catch (err) {
+    console.error("[webhook] edit error:", err);
+    await sendWhatsAppMessage(`Something went wrong while editing: ${String(err)}`);
+  }
+
   return NextResponse.json({ status: "ok" });
 }
