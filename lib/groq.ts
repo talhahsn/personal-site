@@ -93,22 +93,30 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
     `Write a blog post about: "${chosenTopic}"\n\n` +
     `At 2-3 natural points in the content (after a key explanation or before an example), insert an image placeholder in this exact format: [IMAGE: short search query for a relevant photo]\n` +
     `Example: [IMAGE: software team whiteboard planning]\n\n` +
-    `Return a JSON object with exactly these fields:\n` +
-    `{\n` +
-    `  "title": "the post title",\n` +
-    `  "category": "one of: AI & ML, Engineering, Architecture, Frontend, Leadership, Career, General",\n` +
-    `  "tags": ["tag1", "tag2", "tag3"],\n` +
-    `  "content": "full markdown content of the post with [IMAGE: ...] placeholders"\n` +
-    `}\n\n` +
-    `Return ONLY the JSON, no markdown fences, no explanation.`,
+    `Return your response in EXACTLY this format with these exact delimiter lines:\n` +
+    `TITLE: the post title\n` +
+    `CATEGORY: one of: AI & ML, Engineering, Architecture, Frontend, Leadership, Career, General\n` +
+    `TAGS: tag1, tag2, tag3\n` +
+    `CONTENT:\n` +
+    `full markdown content here\n` +
+    `END_CONTENT\n\n` +
+    `No extra text before or after.`,
     SYSTEM_PROMPT
   );
 
-  const json = raw.trim().replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  const parsed = JSON.parse(json);
+  const titleMatch = raw.match(/^TITLE:\s*(.+)$/m);
+  const categoryMatch = raw.match(/^CATEGORY:\s*(.+)$/m);
+  const tagsMatch = raw.match(/^TAGS:\s*(.+)$/m);
+  const contentMatch = raw.match(/^CONTENT:\n([\s\S]+?)END_CONTENT/m);
 
-  const title: string = parsed.title;
-  let content: string = parsed.content;
+  if (!titleMatch || !contentMatch) {
+    throw new Error(`Failed to parse Groq response. Raw: ${raw.slice(0, 200)}`);
+  }
+
+  const title: string = titleMatch[1].trim();
+  const category: string = categoryMatch?.[1].trim() ?? "Engineering";
+  const tags: string[] = tagsMatch ? tagsMatch[1].split(",").map((t) => t.trim()) : [];
+  let content: string = contentMatch[1].trim();
 
   // Replace [IMAGE: query] placeholders with real Unsplash images
   const placeholders = [...content.matchAll(/\[IMAGE:\s*([^\]]+)\]/gi)];
@@ -126,8 +134,8 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
     slug: slugify(title),
     excerpt: autoExcerpt(content),
     content,
-    category: parsed.category ?? "Engineering",
-    tags: parsed.tags ?? [],
+    category,
+    tags,
     read_time: calcReadTime(content),
   };
 }
