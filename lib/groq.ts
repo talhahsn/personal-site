@@ -144,7 +144,11 @@ export async function editBlogPost(currentContent: string, instruction: string):
   return groqCall(
     `Here is the current blog post in markdown:\n\n${currentContent}\n\n` +
     `Apply this change: "${instruction}"\n\n` +
-    `Return ONLY the updated markdown content, no explanation.`,
+    `Important rules:\n` +
+    `- If the instruction asks to change the title, update the # H1 heading at the top of the content\n` +
+    `- If the instruction asks to change the intro or opening, update the first paragraph only\n` +
+    `- Make only the requested change — do not rewrite unrelated sections\n` +
+    `- Return ONLY the updated markdown content, no explanation.`,
     SYSTEM_PROMPT
   );
 }
