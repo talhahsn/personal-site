@@ -91,9 +91,13 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
   // Step 2: generate the full post with image placement markers
   const raw = await groqCall(
     `Write a blog post about: "${chosenTopic}"\n\n` +
-    `At 2-3 natural points in the content (after a key explanation or before an example), insert an image placeholder in this exact format: [IMAGE: short search query for a relevant photo]\n` +
-    `Example: [IMAGE: software team whiteboard planning]\n\n` +
-    `Return your response in EXACTLY this format with these exact delimiter lines:\n` +
+    `Content requirements:\n` +
+    `- Start with a # H1 title heading\n` +
+    `- Use ## H2 subheadings to break the post into 4-6 sections\n` +
+    `- Use ### H3 for sub-points where useful\n` +
+    `- At 2-3 natural points (after a key explanation or before an example), insert: [IMAGE: short search query]\n` +
+    `- Example image placeholder: [IMAGE: software team whiteboard planning]\n\n` +
+    `Return your response in EXACTLY this format:\n` +
     `TITLE: the post title\n` +
     `CATEGORY: one of: AI & ML, Engineering, Architecture, Frontend, Leadership, Career, General\n` +
     `TAGS: tag1, tag2, tag3\n` +
