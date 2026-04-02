@@ -1,5 +1,6 @@
 import { BLOG_TOPIC_SEEDS } from "@/data/blog-topics";
 import { slugify, autoExcerpt, calcReadTime } from "@/lib/blog";
+import { fetchCoverImage } from "@/lib/unsplash";
 
 const MODEL = "llama-3.3-70b-versatile";
 
@@ -54,31 +55,50 @@ export type GeneratedPost = {
   read_time: number;
 };
 
+const TOPIC_ANGLES = [
+  "How to build or implement something practical",
+  "What I learned from real experience (lessons, mistakes, wins)",
+  "A contrarian or fresh take — why the common wisdom is wrong",
+  "The future of something — where it's heading and why it matters",
+  "A step-by-step guide for engineers to do something better",
+  "An honest comparison or tradeoff analysis",
+  "A success story or positive outcome from a specific approach",
+  "Something underrated or overlooked that deserves more attention",
+];
+
 export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
   // Step 1: pick a topic if not provided
   let chosenTopic = topic;
   if (!chosenTopic) {
     const seeds = BLOG_TOPIC_SEEDS.join("\n");
+    const angle = TOPIC_ANGLES[Math.floor(Math.random() * TOPIC_ANGLES.length)];
     chosenTopic = await groqCall(
       `Today's date: ${new Date().toDateString()}\n\n` +
-      `You are choosing a blog topic for a tech engineering leader. ` +
-      `Pick ONE specific, timely angle from the following theme areas. ` +
-      `Make it specific — not "AI agents" but "Why most AI agent demos fail in production".\n\n` +
+      `You are choosing a blog topic for a tech engineering leader.\n` +
+      `Pick ONE specific, timely topic from the theme areas below.\n\n` +
+      `Angle to use this time: "${angle}"\n\n` +
+      `Examples of good titles for this angle:\n` +
+      `- How to structure a team that ships AI features without burning out\n` +
+      `- What building a production LLM app taught me about software engineering\n` +
+      `- The quiet revolution in frontend tooling nobody is talking about\n` +
+      `- Why I stopped writing unit tests for everything (and what I do instead)\n\n` +
       `Theme areas:\n${seeds}\n\n` +
       `Respond with ONLY the topic title, nothing else.`
     );
     chosenTopic = chosenTopic.trim();
   }
 
-  // Step 2: generate the full post
+  // Step 2: generate the full post with image placement markers
   const raw = await groqCall(
     `Write a blog post about: "${chosenTopic}"\n\n` +
+    `At 2-3 natural points in the content (after a key explanation or before an example), insert an image placeholder in this exact format: [IMAGE: short search query for a relevant photo]\n` +
+    `Example: [IMAGE: software team whiteboard planning]\n\n` +
     `Return a JSON object with exactly these fields:\n` +
     `{\n` +
     `  "title": "the post title",\n` +
-    `  "category": "one of: AI & ML, Engineering, Leadership, Career, Frontend, Backend",\n` +
+    `  "category": "one of: AI & ML, Engineering, Architecture, Frontend, Leadership, Career, General",\n` +
     `  "tags": ["tag1", "tag2", "tag3"],\n` +
-    `  "content": "full markdown content of the post"\n` +
+    `  "content": "full markdown content of the post with [IMAGE: ...] placeholders"\n` +
     `}\n\n` +
     `Return ONLY the JSON, no markdown fences, no explanation.`,
     SYSTEM_PROMPT
@@ -88,7 +108,18 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
   const parsed = JSON.parse(json);
 
   const title: string = parsed.title;
-  const content: string = parsed.content;
+  let content: string = parsed.content;
+
+  // Replace [IMAGE: query] placeholders with real Unsplash images
+  const placeholders = [...content.matchAll(/\[IMAGE:\s*([^\]]+)\]/gi)];
+  for (const match of placeholders) {
+    const query = match[1].trim();
+    const url = await fetchCoverImage(query);
+    content = content.replace(
+      match[0],
+      url ? `![${query}](${url})` : ""
+    );
+  }
 
   return {
     title,

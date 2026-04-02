@@ -16,6 +16,7 @@ interface BlogCardProps {
     | "created_at"
     | "read_time"
     | "tags"
+    | "cover_image"
   >;
   featured?: boolean;
   showStatus?: boolean;
@@ -27,7 +28,18 @@ export function BlogCard({ post, featured = false, showStatus = false }: BlogCar
   if (featured) {
     return (
       <Link href={`/blog/${post.slug}`} className="group block">
-        <article className="relative rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 hover:border-sky-300 dark:hover:border-sky-800 hover:shadow-lg transition-all duration-300">
+        <article className="relative rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden hover:border-sky-300 dark:hover:border-sky-800 hover:shadow-lg transition-all duration-300">
+          {post.cover_image && (
+            <div className="h-52 w-full overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.cover_image}
+                alt={post.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+          )}
+          <div className="p-8">
           {/* Top row */}
           <div className="flex items-center justify-between mb-4">
             <CategoryBadge category={post.category} />
@@ -84,6 +96,7 @@ export function BlogCard({ post, featured = false, showStatus = false }: BlogCar
               ))}
             </div>
           )}
+          </div>
         </article>
       </Link>
     );
@@ -91,7 +104,18 @@ export function BlogCard({ post, featured = false, showStatus = false }: BlogCar
 
   return (
     <Link href={`/blog/${post.slug}`} className="group block h-full">
-      <article className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 hover:border-sky-300 dark:hover:border-sky-800 hover:shadow-md transition-all duration-300">
+      <article className="h-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden hover:border-sky-300 dark:hover:border-sky-800 hover:shadow-md transition-all duration-300">
+        {post.cover_image && (
+          <div className="h-40 w-full overflow-hidden shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.cover_image}
+              alt={post.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+        )}
+        <div className="flex flex-col flex-1 p-6">
         {/* Top row */}
         <div className="flex items-center justify-between mb-3">
           <CategoryBadge category={post.category} />
@@ -133,6 +157,7 @@ export function BlogCard({ post, featured = false, showStatus = false }: BlogCar
           <span className="text-xs font-medium text-sky-700 dark:text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity">
             Read →
           </span>
+        </div>
         </div>
       </article>
     </Link>

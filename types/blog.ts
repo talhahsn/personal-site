@@ -9,6 +9,7 @@ export interface Post {
   published: boolean;
   published_at: string | null;
   read_time: number;
+  cover_image: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +27,7 @@ export type PostInput = {
 export type PostUpdateInput = Partial<PostInput>;
 
 export const CATEGORIES = [
+  "AI & ML",
   "Engineering",
   "Architecture",
   "Frontend",
@@ -37,6 +39,8 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number];
 
 export const CATEGORY_STYLES: Record<string, string> = {
+  "AI & ML":
+    "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-400 border-purple-200 dark:border-purple-900",
   Engineering:
     "bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400 border-sky-200 dark:border-sky-900",
   Architecture:

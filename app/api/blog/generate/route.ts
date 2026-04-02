@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { generateBlogPost } from "@/lib/groq";
 import { sendWhatsAppMessage, buildReviewMessage } from "@/lib/whatsapp";
+import { fetchCoverImage } from "@/lib/unsplash";
 
 export async function POST(req: NextRequest) {
   if (req.headers.get("x-api-key") !== process.env.ADMIN_TOKEN) {
@@ -20,6 +21,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Generation failed", detail: String(err) }, { status: 500 });
   }
 
+  // Fetch cover image from Unsplash using tags
+  const imageQuery = generated.tags.slice(0, 2).join(" ") || generated.category;
+  const cover_image = await fetchCoverImage(imageQuery);
+
   // Save as draft to Supabase
   const { data, error } = await supabaseAdmin
     .from("posts")
@@ -31,6 +36,7 @@ export async function POST(req: NextRequest) {
       category: generated.category,
       tags: generated.tags,
       read_time: generated.read_time,
+      cover_image,
       published: false,
       published_at: null,
     })

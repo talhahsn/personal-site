@@ -81,6 +81,16 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           {/* Article header */}
           <article>
+            {typedPost.cover_image && (
+              <div className="mb-8 rounded-2xl overflow-hidden h-72 w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={typedPost.cover_image}
+                  alt={typedPost.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
             <header className="mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <CategoryBadge category={typedPost.category} />
