@@ -49,13 +49,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Notify via WhatsApp
+  let whatsappError: string | null = null;
   try {
     const msg = buildReviewMessage(data.title, data.excerpt, data.slug);
     await sendWhatsAppMessage(msg);
   } catch (err) {
     // Don't fail the request if WhatsApp fails — post is already saved
     console.error("[generate] WhatsApp notify error:", err);
+    whatsappError = String(err);
   }
 
-  return NextResponse.json({ post: data }, { status: 201 });
+  return NextResponse.json({ post: data, whatsapp_error: whatsappError }, { status: 201 });
 }

@@ -9,6 +9,7 @@ import { ProjectModal } from "./projects/ProjectModal";
 import Link from "next/link";
 import Image from "next/image";
 import { Download, MapPin, ArrowRight, BadgeCheck } from "lucide-react";
+import { skills, SKILL_CATEGORIES, CATEGORY_META } from "@/data/skills";
 import { useEffect, useRef, useState } from "react";
 
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
@@ -92,10 +93,6 @@ const fadeUp: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
-const skills = [
-  "React", "Next.js", "TypeScript", "Node.js",
-  "NestJS", "GraphQL", "PostgreSQL", "Angular", "Docker", "CI/CD",
-];
 
 export default function Home() {
   const previewExp = experience.slice(0, 3);
@@ -215,12 +212,12 @@ export default function Home() {
               variants={fadeUp}
               className="mt-4 flex flex-wrap justify-center gap-2"
             >
-              {skills.map((skill) => (
+              {skills.filter((s) => s.level === "Expert").slice(0, 8).map((s) => (
                 <span
-                  key={skill}
+                  key={s.name}
                   className="px-3 py-1 text-xs rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium"
                 >
-                  {skill}
+                  {s.name}
                 </span>
               ))}
             </motion.div>
@@ -377,42 +374,70 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* SKILLS */}
+      {/* SKILLS PREVIEW */}
       <section className="py-12 bg-white dark:bg-gray-950">
         <Container>
-          <div className="mb-5">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100 pl-3 border-l-2 border-sky-500">
-              Skills & Stack
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm pl-3">
-              Technologies I work with daily
-            </p>
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="font-manrope text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-gray-100 leading-[0.95]">
+                Skills <span className="text-gray-300 dark:text-gray-700">&amp;</span> Stack<span className="text-sky-500">.</span>
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
+                {skills.filter((s) => s.level === "Expert").length} expert-level · {skills.length} total across {SKILL_CATEGORIES.length} domains
+              </p>
+            </div>
+            <Link
+              href="/skills"
+              className="text-sm font-medium text-sky-700 dark:text-sky-400 hover:underline flex items-center gap-1 shrink-0"
+            >
+              View All <ArrowRight size={14} />
+            </Link>
           </div>
           <motion.div
-            className="flex flex-wrap gap-2.5"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-stretch"
             variants={stagger}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-40px" }}
           >
-            {[
-              "React", "Next.js", "TypeScript", "JavaScript",
-              "Node.js", "NestJS", "Express",
-              "GraphQL", "REST APIs", "Apollo",
-              "PostgreSQL", "MongoDB", "Redis",
-              "Angular", "AngularJS",
-              "Docker", "CI/CD", "GitHub Actions",
-              "Tailwind CSS", "Framer Motion",
-              "Kong API Gateway", "Vercel",
-            ].map((skill) => (
-              <motion.span
-                key={skill}
-                variants={fadeUp}
-                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 bg-slate-50 dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950 hover:text-sky-700 dark:hover:text-sky-300 transition-all cursor-default"
-              >
-                {skill}
-              </motion.span>
-            ))}
+            {(["Frontend", "Backend", "CSS & UI", "State Management", "DevOps"] as const).map((cat) => {
+              const meta = CATEGORY_META[cat];
+              const catSkills = skills.filter((s) => s.category === cat);
+              const expertCount = catSkills.filter((s) => s.level === "Expert").length;
+              const topSkills = catSkills.slice(0, 3);
+              const remaining = catSkills.length - 3;
+              return (
+                <motion.div key={cat} variants={fadeUp} className="h-full">
+                  <Link
+                    href="/skills"
+                    className={`flex flex-col h-full p-4 rounded-xl border ${meta.bg} ${meta.border} hover:shadow-sm transition-all group`}
+                  >
+                    <span className={`text-xs font-semibold ${meta.color}`}>{cat}</span>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-gray-100 mt-1.5">
+                      {catSkills.length}
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 mb-3">
+                      {expertCount} expert
+                    </p>
+                    <div className="mt-auto flex flex-col gap-1">
+                      {topSkills.map((s) => (
+                        <span
+                          key={s.name}
+                          className={`text-xs px-1.5 py-0.5 rounded ${meta.bg} ${meta.color} border ${meta.border} truncate`}
+                        >
+                          {s.name}
+                        </span>
+                      ))}
+                      {remaining > 0 && (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 px-1.5 py-0.5">
+                          +{remaining} more
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </Container>
       </section>
