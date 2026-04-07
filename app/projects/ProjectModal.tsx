@@ -88,11 +88,11 @@ export function ProjectModal({ project }: { project: Project }) {
       }
     >
       {/* Header meta */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-wrap items-center gap-2 mb-5">
         <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900">
           {project.company}
         </span>
-        <div className="flex flex-wrap gap-1.5 justify-end">
+        <div className="flex flex-wrap gap-1.5">
           {project.stack.map((tech) => (
             <span
               key={tech}

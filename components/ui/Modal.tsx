@@ -35,14 +35,15 @@ export function Modal({
             className="
                 fixed z-50
                 left-1/2 top-1/2
-                w-[90vw] max-w-2xl
+                w-[95vw] max-w-2xl
                 -translate-x-1/2 -translate-y-1/2
-                rounded-xl bg-white dark:bg-gray-900 p-8 shadow-2xl
+                max-h-[90vh] overflow-y-auto
+                rounded-xl bg-white dark:bg-gray-900 p-5 sm:p-8 shadow-2xl
                 focus:outline-none
                 text-gray-900 dark:text-gray-100
                 "
           >
-            <Dialog.Title className="text-2xl font-bold mb-4">
+            <Dialog.Title className="text-xl sm:text-2xl font-bold mb-4 pr-8">
               {title || "Project details"}
             </Dialog.Title>
 
