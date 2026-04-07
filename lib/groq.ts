@@ -91,20 +91,20 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
   // Step 2: generate the full post with image placement markers
   const raw = await groqCall(
     `Write a blog post about: "${chosenTopic}"\n\n` +
-    `Content requirements:\n` +
-    `- Start with a # H1 title heading\n` +
-    `- Use ## H2 subheadings to break the post into 4-6 sections\n` +
-    `- Use ### H3 for sub-points where useful\n` +
-    `- At 2-3 natural points (after a key explanation or before an example), insert: [IMAGE: short search query]\n` +
-    `- Example image placeholder: [IMAGE: software team whiteboard planning]\n\n` +
-    `Return your response in EXACTLY this format:\n` +
-    `TITLE: the post title\n` +
+    `You MUST respond in EXACTLY this format — no deviations, no extra text before TITLE::\n\n` +
+    `TITLE: the post title (plain text, no markdown)\n` +
     `CATEGORY: one of: AI & ML, Engineering, Architecture, Frontend, Leadership, Career, General\n` +
     `TAGS: tag1, tag2, tag3\n` +
     `CONTENT:\n` +
     `full markdown content here\n` +
     `END_CONTENT\n\n` +
-    `No extra text before or after.`,
+    `Rules for the CONTENT section:\n` +
+    `- First line must be a # H1 heading (repeat of the title)\n` +
+    `- Use ## H2 subheadings to break into 4-6 sections\n` +
+    `- Use ### H3 for sub-points where useful\n` +
+    `- At 2-3 natural points, insert: [IMAGE: short search query]\n` +
+    `- Example: [IMAGE: software team whiteboard planning]\n` +
+    `- Do NOT start your response with # or any markdown — start with TITLE:`,
     SYSTEM_PROMPT
   );
 
@@ -151,7 +151,8 @@ export async function editBlogPost(currentContent: string, instruction: string):
     `Important rules:\n` +
     `- If the instruction asks to change the title, update the # H1 heading at the top of the content\n` +
     `- If the instruction asks to change the intro or opening, update the first paragraph only\n` +
-    `- Make only the requested change — do not rewrite unrelated sections\n` +
+    `- If the instruction uses words like "some", "a few", "one", "a couple" — change ONLY that many instances, not all\n` +
+    `- Make only the requested change — do not rewrite, remove, or restructure unrelated sections\n` +
     `- Return ONLY the updated markdown content, no explanation.`,
     SYSTEM_PROMPT
   );
