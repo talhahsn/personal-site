@@ -5,7 +5,6 @@ export const profile = {
   summary:
     "Senior Software Engineer with 8+ years building full-stack production systems across fintech, insurtech, healthcare, and SaaS. Strong across the stack — React, Next.js, Node.js, NestJS — with a track record of leading teams, shipping at scale, and improving code quality and release velocity.",
   email: "talhahsn@gmail.com",
-  phone: "+92 343-3497937",
   linkedin: "https://www.linkedin.com/in/talhahsn/",
   github: "https://github.com/talhahsn",
   available: true,
@@ -32,4 +31,14 @@ export const profile = {
     "CS Quiz Runner-Up — Softcom'16 GIK",
     "Member, ACM Student Chapter, 2015 – 2017",
   ],
+
+  personal: {
+    hobbies: ["competitive programming", "building side projects", "reading tech blogs", "cricket"],
+    food: ["biryani", "BBQ", "pizza"],
+    tvShows: ["Mr. Robot", "Silicon Valley", "Breaking Bad"],
+    funFacts: [
+      "Has competed in multiple speed programming contests",
+      "Enjoys exploring AI tooling and building with LLMs in his spare time",
+    ],
+  },
 }

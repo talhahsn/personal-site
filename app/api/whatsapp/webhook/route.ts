@@ -33,17 +33,20 @@ export async function POST(req: NextRequest) {
 
   console.log(`[WhatsApp] Incoming: "${text}"`);
 
-  // Find the most recent draft (the one pending review)
+  // Find a recent draft (within 12 hours) — prevents stale drafts from being
+  // accidentally edited if a random message comes in
+  const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
   const { data: draft, error } = await supabaseAdmin
     .from("posts")
     .select("*")
     .eq("published", false)
+    .gte("created_at", twelveHoursAgo)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
 
   if (error || !draft) {
-    await sendWhatsAppMessage("No draft found to act on. Generate a new post first.");
+    await sendWhatsAppMessage("No active draft found. Generate a new post first.");
     return NextResponse.json({ status: "no_draft" });
   }
 

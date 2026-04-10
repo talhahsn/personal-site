@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { isSameOrigin } from "@/lib/same-origin";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -32,6 +33,10 @@ function rateLimit(ip: string) {
 }
 
 export async function POST(req: Request) {
+  if (!isSameOrigin(req)) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const ip =
       req.headers.get("x-forwarded-for") ??

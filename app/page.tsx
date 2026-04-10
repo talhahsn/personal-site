@@ -166,6 +166,8 @@ export default function Home() {
                 alt="Talha Hassan"
                 width={96}
                 height={96}
+                loading="eager"
+                priority
                 className="rounded-full shadow-xl ring-4 ring-white dark:ring-gray-800"
               />
               {profile.available && (

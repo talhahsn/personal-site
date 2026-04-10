@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@radix-ui/react-dialog": "^1.1.15",
     "@supabase/supabase-js": "^2.100.1",
     "@uiw/react-md-editor": "^4.1.0",

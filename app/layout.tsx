@@ -3,6 +3,7 @@ import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 import { Inter, Manrope, JetBrains_Mono } from "next/font/google";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
             <main>{children}</main>
           </PageTransition>
           <Footer />
+          <ChatWidget />
         </ThemeProvider>
       </body>
     </html>
