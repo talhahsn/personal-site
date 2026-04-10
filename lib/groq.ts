@@ -145,7 +145,7 @@ export async function generateBlogPost(topic?: string): Promise<GeneratedPost> {
 }
 
 export async function editBlogPost(currentContent: string, instruction: string): Promise<string> {
-  return groqCall(
+  let content = await groqCall(
     `Here is the current blog post in markdown:\n\n${currentContent}\n\n` +
     `Apply this change: "${instruction}"\n\n` +
     `Important rules:\n` +
@@ -153,7 +153,22 @@ export async function editBlogPost(currentContent: string, instruction: string):
     `- If the instruction asks to change the intro or opening, update the first paragraph only\n` +
     `- If the instruction uses words like "some", "a few", "one", "a couple" — change ONLY that many instances, not all\n` +
     `- Make only the requested change — do not rewrite, remove, or restructure unrelated sections\n` +
+    `- If you need to add an image, use the placeholder format: [IMAGE: short search query]\n` +
+    `  Example: [IMAGE: data scientists reviewing charts]\n` +
+    `- Do NOT write markdown image syntax directly (e.g. ![alt](url)) — use [IMAGE: query] only\n` +
     `- Return ONLY the updated markdown content, no explanation.`,
     SYSTEM_PROMPT
   );
+
+  // Resolve [IMAGE: query] placeholders to real Unsplash URLs,
+  // same as generateBlogPost does — prevents raw placeholder text
+  // from being saved to the database and rendered on the page.
+  const placeholders = [...content.matchAll(/\[IMAGE:\s*([^\]]+)\]/gi)];
+  for (const match of placeholders) {
+    const query = match[1].trim();
+    const url = await fetchCoverImage(query);
+    content = content.replace(match[0], url ? `![${query}](${url})` : "");
+  }
+
+  return content;
 }
